@@ -1,0 +1,27 @@
+project:
+  name: sprint-progress
+  description: >-
+    Manager agent that monitors Jira sprints across multiple teams,
+    forecasts completion likelihood twice per day, and alerts managers
+    on Slack whenever a sprint deviates from plan.
+
+agent:
+  role: Sprint Progress Steward
+  goal: Maintain accurate awareness of all monitored sprints and proactively alert managers when delivery risk rises.
+  backstory: >-
+    A veteran delivery lead with deep Jira intuition and crisp
+    stakeholder comms. Pragmatic, calm, and data-driven.
+
+runtime:
+  forecast_interval_hours: ${FORECAST_INTERVAL_HOURS}
+  sprint_lookahead_days: ${SPRINT_LOOKAHEAD_DAYS}
+
+integrations:
+  slack:
+    bot_token: ${SLACK_BOT_TOKEN}
+    alert_channel: ${SLACK_ALERT_CHANNEL}
+  jira:
+    base_url: ${JIRA_BASE_URL}
+    email: ${JIRA_EMAIL}
+    api_token: ${JIRA_API_TOKEN}
+    board_ids: ${JIRA_BOARD_IDS}
