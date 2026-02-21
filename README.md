@@ -15,8 +15,11 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
 ├── .gitignore
 ├── README.md
 ├── config.yaml
+├── requirements.txt
 └── src
+    ├── __init__.py
     ├── agents.py
+    ├── crew.py
     ├── policies.py
     ├── tasks.py
     └── tools
@@ -26,7 +29,6 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
 
 ## Prerequisites
 - Python 3.11+
-- Poetry or pip (your choice)
 - Jira API token with read access to the target boards
 - Slack bot token with permission to post in the alert channel
 
@@ -35,7 +37,7 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
    ```bash
    cd sprint-progress
    python -m venv .venv && source .venv/bin/activate
-   pip install -r requirements.txt  # or `pip install crewai slack_sdk jira`
+   pip install -r requirements.txt
    ```
 2. **Copy environment file**
    ```bash
@@ -44,12 +46,12 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
    ```
 3. **Run the agent**
    ```bash
-   export $(grep -v '^#' .env | xargs)  # or use direnv
-   python -m crewai run config.yaml
+   export $(grep -v '^#' .env | xargs)  # or use direnv/foreman
+   python -m src.crew
    ```
 
 ## Environment Variables
-See `.env.example` for full list:
+See `.env.example` for the authoritative list:
 - `SLACK_BOT_TOKEN` – Slack bot token (starts with `xoxb-`)
 - `SLACK_ALERT_CHANNEL` – channel ID or name
 - `JIRA_BASE_URL` – e.g. `https://company.atlassian.net`
