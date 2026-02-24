@@ -44,11 +44,31 @@ start:
 	fi
 
 stop:
-	@if [ -f "$(PID_FILE)" ] && kill -0 "$$(cat "$(PID_FILE)")" 2>/dev/null; then \
-		pid="$$(cat "$(PID_FILE)")"; \
-		kill "$$pid"; \
-		rm -f "$(PID_FILE)"; \
-		echo "Stopped agent PID $$pid"; \
+	@if [ -f "$(PID_FILE)" ]; then \
+		pid="$$(cat "$(PID_FILE)" 2>/dev/null || true)"; \
+		if [ -z "$$pid" ]; then \
+			echo "PID file is empty. Cleaning up."; \
+			rm -f "$(PID_FILE)"; \
+			exit 0; \
+		fi; \
+		if kill -0 "$$pid" 2>/dev/null; then \
+			echo "Stopping agent PID $$pid..."; \
+			kill "$$pid" 2>/dev/null || true; \
+			i=0; \
+			while kill -0 "$$pid" 2>/dev/null && [ $$i -lt 20 ]; do \
+				sleep 1; \
+				i=$$((i + 1)); \
+			done; \
+			if kill -0 "$$pid" 2>/dev/null; then \
+				echo "Graceful stop timed out, sending SIGKILL to PID $$pid."; \
+				kill -9 "$$pid" 2>/dev/null || true; \
+			fi; \
+			rm -f "$(PID_FILE)"; \
+			echo "Agent stopped."; \
+		else \
+			echo "Stale PID file found. Cleaning up."; \
+			rm -f "$(PID_FILE)"; \
+		fi; \
 	else \
 		echo "Agent is not running."; \
 	fi

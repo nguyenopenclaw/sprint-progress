@@ -37,4 +37,5 @@ if [ -f ".env" ]; then
   set +a
 fi
 
-python -m src.crew
+# Replace shell with Python process so PID in file matches the agent.
+exec python -m src.crew
