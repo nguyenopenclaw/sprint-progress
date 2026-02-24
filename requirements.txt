@@ -1,4 +1,5 @@
 crewai>=0.30.0
+pysqlite3-binary>=0.5.4; platform_system == "Linux"
 slack_sdk>=3.31.0
 jira>=3.8.0
 python-dotenv>=1.0.1
