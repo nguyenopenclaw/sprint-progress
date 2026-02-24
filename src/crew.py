@@ -3,6 +3,7 @@
 import logging
 import os
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from crewai import Crew
@@ -56,6 +57,7 @@ def _is_board_green_line(text: str) -> bool:
     return (
         (text.startswith("Board ") and "all monitored sprints are on track." in text)
         or (text.startswith("Доска ") and "все отслеживаемые спринты идут по плану." in text)
+        or (text.startswith("Команда ") and "все отслеживаемые спринты идут по плану." in text)
     )
 
 
@@ -66,6 +68,7 @@ def _extract_board_messages(raw_text: str) -> list[str]:
     board_headers = (
         "Sprint Health Update | Board ",
         "Отчет о здоровье спринтов | Доска ",
+        "Отчет о здоровье спринтов | Команда ",
     )
 
     while idx < len(lines):
@@ -118,22 +121,63 @@ def run():
     return output
 
 
+def _compute_schedule_hours(
+    notify_start_hour: int,
+    notify_end_hour: int,
+    interval_hours: int,
+) -> list[int]:
+    if not 0 <= notify_start_hour <= 23:
+        raise ValueError("NOTIFY_START_HOUR must be in range 0..23.")
+    if not 0 <= notify_end_hour <= 23:
+        raise ValueError("NOTIFY_END_HOUR must be in range 0..23.")
+    if interval_hours <= 0:
+        raise ValueError("FORECAST_INTERVAL_HOURS must be a positive integer.")
+
+    # start == end means full-day scheduling window.
+    window_length = (notify_end_hour - notify_start_hour) % 24 or 24
+    offsets = range(0, window_length, interval_hours)
+    hours = sorted({(notify_start_hour + offset) % 24 for offset in offsets})
+
+    if not hours:
+        raise ValueError("No schedule hours computed from current settings.")
+
+    return hours
+
+
 def _run_with_scheduler():
     interval_hours = int(os.getenv("FORECAST_INTERVAL_HOURS", "12"))
+    notify_start_hour = int(os.getenv("NOTIFY_START_HOUR", "12"))
+    notify_end_hour = int(os.getenv("NOTIFY_END_HOUR", "22"))
+    timezone = ZoneInfo(os.getenv("QUIET_HOURS_TZ", "Asia/Ho_Chi_Minh"))
+    schedule_hours = _compute_schedule_hours(
+        notify_start_hour=notify_start_hour,
+        notify_end_hour=notify_end_hour,
+        interval_hours=interval_hours,
+    )
 
     # Run once at startup, then keep a fixed interval cadence.
     run()
 
-    scheduler = BlockingScheduler()
+    scheduler = BlockingScheduler(timezone=timezone)
     scheduler.add_job(
         run,
-        trigger="interval",
-        hours=interval_hours,
+        trigger="cron",
+        hour=",".join(str(hour) for hour in schedule_hours),
+        minute=0,
+        second=0,
         max_instances=1,
         coalesce=True,
     )
 
-    logging.info("Scheduler started: running every %s hour(s).", interval_hours)
+    logging.info(
+        "Scheduler started (%s): immediate run done; daily slots=%s "
+        "(start=%02d end=%02d interval=%sh).",
+        timezone.key,
+        schedule_hours,
+        notify_start_hour,
+        notify_end_hour,
+        interval_hours,
+    )
     scheduler.start()
 
 

@@ -11,6 +11,7 @@ class JiraSprintMetricsTool(BaseTool):
     description: str = "Collect metrics for active sprints across configured Jira boards."
     _client: JIRA = PrivateAttr()
     _board_ids: list[str] = PrivateAttr(default_factory=list)
+    _board_name_map: dict[str, str] = PrivateAttr(default_factory=dict)
     _base_url: str = PrivateAttr(default="")
 
     def model_post_init(self, __context):
@@ -25,6 +26,28 @@ class JiraSprintMetricsTool(BaseTool):
         self._base_url = base_url.rstrip("/")
         boards_raw = os.getenv("JIRA_BOARD_IDS", "")
         self._board_ids = [bid.strip() for bid in boards_raw.split(",") if bid.strip()]
+        self._board_name_map = self._parse_board_name_map(
+            os.getenv("JIRA_BOARD_NAME_MAP", os.getenv("JIRA_BOARD_NAMES", ""))
+        )
+
+    @staticmethod
+    def _parse_board_name_map(raw_value: str) -> dict[str, str]:
+        mapping: dict[str, str] = {}
+        for pair in raw_value.split(","):
+            item = pair.strip()
+            if not item:
+                continue
+            if ":" in item:
+                board_id, board_name = item.split(":", 1)
+            elif "=" in item:
+                board_id, board_name = item.split("=", 1)
+            else:
+                continue
+            board_id = board_id.strip()
+            board_name = board_name.strip()
+            if board_id and board_name:
+                mapping[board_id] = board_name
+        return mapping
 
     @staticmethod
     def _parse_jira_datetime(value: str | None) -> datetime | None:
@@ -73,7 +96,13 @@ class JiraSprintMetricsTool(BaseTool):
         now = datetime.now(timezone.utc)
         metrics = []
         for board_id in self._board_ids:
-            board_info = {"board_id": board_id, "sprints": []}
+            board_name = self._board_name_map.get(board_id, board_id)
+            board_info = {
+                "board_id": board_id,
+                "board_name": board_name,
+                "team_name": board_name,
+                "sprints": [],
+            }
             try:
                 sprints = self._client.sprints(board_id, state="active")
                 for sprint in sprints:

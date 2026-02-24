@@ -49,7 +49,8 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
    export $(grep -v '^#' .env | xargs)  # or use direnv/foreman
    python -m src.crew
    ```
-   Starts immediately and then repeats every `FORECAST_INTERVAL_HOURS`.
+   Starts immediately, then runs at hour slots anchored to `NOTIFY_START_HOUR`
+   with step `FORECAST_INTERVAL_HOURS` until `NOTIFY_END_HOUR` (exclusive).
 
 ## Environment Variables
 See `.env.example` for the authoritative list:
@@ -60,7 +61,7 @@ See `.env.example` for the authoritative list:
 - `JIRA_API_TOKEN` – Jira API token
 - `JIRA_BOARD_IDS` – comma-separated Agile board IDs to monitor
 - `SPRINT_LOOKAHEAD_DAYS` – horizon for forecast context (default 7)
-- `FORECAST_INTERVAL_HOURS` – cadence for re-forecasting (default 12)
+- `FORECAST_INTERVAL_HOURS` – step between scheduled runs inside notify window (default 12)
 - `QUIET_HOURS_TZ` – timezone for notification window (default `Asia/Ho_Chi_Minh`)
 - `NOTIFY_START_HOUR` – first hour when Slack alerts are allowed (default 12)
 - `NOTIFY_END_HOUR` – hour when alerts stop, exclusive (default 22)
