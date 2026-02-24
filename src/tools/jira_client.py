@@ -156,6 +156,7 @@ class JiraSprintMetricsTool(BaseTool):
                         issue_snapshots.append(
                             {
                                 "key": issue.key,
+                                "summary": getattr(issue.fields, "summary", "") or "",
                                 "issue_url": f"{self._base_url}/browse/{issue.key}",
                                 "status": status_name,
                                 "status_category": status_category,

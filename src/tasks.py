@@ -24,13 +24,13 @@ def explore_issue_risks_task(explorer_agent, metrics_task):
             "Deep-dive into issue-level execution signals using the collected metrics. "
             "For each risky issue, determine: how long it has already been in work, "
             "how much time budget remains against original estimate, and concrete risks. "
-            "For every risky issue include a direct Jira link from issue_url. "
+            "For every risky issue include key, issue summary, and direct Jira link from issue_url. "
             "Write the full report in Russian."
         ),
         expected_output=(
             "Explorer report with issue-level risk evidence: time in work, "
             "remaining time budget, risk factors per issue, and a direct Jira URL "
-            "for each problematic issue."
+            "plus issue title for each problematic issue."
         ),
         agent=explorer_agent,
         context=[metrics_task],
@@ -46,13 +46,13 @@ def manager_action_plan_task(manager_agent, metrics_task, explorer_task):
             "Process data iteratively by board in the exact order returned by Jira. "
             "Do not merge all boards into one global plan. Build one compact plan per board. "
             "For each board include a short 'Проблемные задачи' section listing risky "
-            "issues with key and direct Jira link. "
+            "issues with key, title, and direct Jira link. "
             "The full action plan must be in Russian."
         ),
         expected_output=(
             "Ordered per-board manager plans (not a single merged report): "
             "on-time confidence, stuck status, current progress, prioritized actions, "
-            "and links to problematic issues."
+            "and problematic issues with keys, titles, and links."
         ),
         agent=manager_agent,
         context=[metrics_task, explorer_task],
@@ -78,7 +78,8 @@ def publish_alert_task(manager_agent, slack_notifier, manager_plan_task):
             "Блокер: <STATUS_OR_NONE>\n"
             "3) Then section 'Действия (следующие 24ч):' with max 3 bullets total.\n"
             "4) If a sprint has clear blockers, add one line "
-            "'Проблемные задачи: <KEY1> (<URL1>), <KEY2> (<URL2>)' with max 3 issues.\n"
+            "'Проблемные задачи: <KEY1> — <TITLE1> (<URL1>), <KEY2> — <TITLE2> (<URL2>)' "
+            "with max 3 issues.\n"
             "5) Do not include issue-level deep details, timestamps, or long explanations.\n"
             "6) Total message length <= 1200 characters.\n"
             "7) If all sprints of the current board are green and stable, send one short line: "
