@@ -49,6 +49,7 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
    export $(grep -v '^#' .env | xargs)  # or use direnv/foreman
    python -m src.crew
    ```
+   Starts immediately and then repeats every `FORECAST_INTERVAL_HOURS`.
 
 ## Environment Variables
 See `.env.example` for the authoritative list:
@@ -73,5 +74,4 @@ See `.env.example` for the authoritative list:
 
 ## TODOs / Next Steps
 - [ ] Connect to actual Jira + Slack credentials
-- [ ] Schedule via cron/PM2 for twice-daily execution
 - [ ] Add persistence layer for historical trend charts (optional)

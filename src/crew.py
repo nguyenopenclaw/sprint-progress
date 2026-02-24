@@ -1,5 +1,9 @@
 """Crew wiring for the sprint-progress agent."""
 
+import logging
+import os
+
+from apscheduler.schedulers.blocking import BlockingScheduler
 from crewai import Crew
 
 from .agents import sprint_progress_agent
@@ -26,3 +30,27 @@ def build_crew():
 def run():
     crew = build_crew()
     return crew.kickoff()
+
+
+def _run_with_scheduler():
+    interval_hours = int(os.getenv("FORECAST_INTERVAL_HOURS", "12"))
+
+    # Run once at startup, then keep a fixed interval cadence.
+    run()
+
+    scheduler = BlockingScheduler()
+    scheduler.add_job(
+        run,
+        trigger="interval",
+        hours=interval_hours,
+        max_instances=1,
+        coalesce=True,
+    )
+
+    logging.info("Scheduler started: running every %s hour(s).", interval_hours)
+    scheduler.start()
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    _run_with_scheduler()
