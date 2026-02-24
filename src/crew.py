@@ -53,13 +53,20 @@ def _extract_output_text(run_output: Any) -> str:
 
 
 def _is_board_green_line(text: str) -> bool:
-    return text.startswith("Board ") and "all monitored sprints are on track." in text
+    return (
+        (text.startswith("Board ") and "all monitored sprints are on track." in text)
+        or (text.startswith("Доска ") and "все отслеживаемые спринты идут по плану." in text)
+    )
 
 
 def _extract_board_messages(raw_text: str) -> list[str]:
     lines = raw_text.splitlines()
     messages: list[str] = []
     idx = 0
+    board_headers = (
+        "Sprint Health Update | Board ",
+        "Отчет о здоровье спринтов | Доска ",
+    )
 
     while idx < len(lines):
         stripped = lines[idx].strip()
@@ -69,15 +76,13 @@ def _extract_board_messages(raw_text: str) -> list[str]:
             idx += 1
             continue
 
-        if stripped.startswith("Sprint Health Update | Board "):
+        if stripped.startswith(board_headers):
             block = [stripped]
             idx += 1
             while idx < len(lines):
                 current = lines[idx].rstrip()
                 current_stripped = current.strip()
-                if current_stripped.startswith(
-                    "Sprint Health Update | Board "
-                ) or _is_board_green_line(current_stripped):
+                if current_stripped.startswith(board_headers) or _is_board_green_line(current_stripped):
                     break
                 block.append(current)
                 idx += 1

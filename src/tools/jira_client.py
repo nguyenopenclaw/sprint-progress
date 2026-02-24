@@ -11,6 +11,7 @@ class JiraSprintMetricsTool(BaseTool):
     description: str = "Collect metrics for active sprints across configured Jira boards."
     _client: JIRA = PrivateAttr()
     _board_ids: list[str] = PrivateAttr(default_factory=list)
+    _base_url: str = PrivateAttr(default="")
 
     def model_post_init(self, __context):
         super().model_post_init(__context)
@@ -21,6 +22,7 @@ class JiraSprintMetricsTool(BaseTool):
             raise ValueError("JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN are required.")
 
         self._client = JIRA(server=base_url, basic_auth=(email, api_token))
+        self._base_url = base_url.rstrip("/")
         boards_raw = os.getenv("JIRA_BOARD_IDS", "")
         self._board_ids = [bid.strip() for bid in boards_raw.split(",") if bid.strip()]
 
@@ -154,6 +156,7 @@ class JiraSprintMetricsTool(BaseTool):
                         issue_snapshots.append(
                             {
                                 "key": issue.key,
+                                "issue_url": f"{self._base_url}/browse/{issue.key}",
                                 "status": status_name,
                                 "status_category": status_category,
                                 "original_estimate_seconds": estimate_seconds,
