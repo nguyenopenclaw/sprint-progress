@@ -52,16 +52,20 @@ CrewAI manager agent that monitors Jira sprints across multiple teams, forecasts
    ```
    `run_agent.sh` подхватывает `.venv` и `.env` автоматически.
 
-4. **Optional: use Makefile helpers**
+4. **Use Makefile commands (recommended)**
    ```bash
-   make venv
-   make install
-   make run      # foreground
-   make start    # background, logs -> agent.log
-   make status
-   make stop
-   make logs
+   make help
    ```
+
+## Make Commands
+- `make help` — показать все доступные команды
+- `make venv` — создать виртуальное окружение `.venv`
+- `make install` — установить зависимости из `requirements.txt`
+- `make run` — запустить агента в foreground
+- `make start` — запустить агента в background, логи в `agent.log`
+- `make stop` — остановить background-процесс агента
+- `make status` — показать статус процесса агента
+- `make logs` — смотреть логи (`tail -f agent.log`)
 
 Starts immediately, then runs at hour slots anchored to `NOTIFY_START_HOUR`
 with step `FORECAST_INTERVAL_HOURS` until `NOTIFY_END_HOUR` (exclusive).
