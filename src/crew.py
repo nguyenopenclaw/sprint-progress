@@ -6,8 +6,13 @@ import os
 from apscheduler.schedulers.blocking import BlockingScheduler
 from crewai import Crew
 
-from .agents import sprint_progress_agent
-from .tasks import collect_jira_metrics_task, forecast_delivery_task, publish_alert_task
+from .agents import sprint_explorer_agent, sprint_manager_agent
+from .tasks import (
+    collect_jira_metrics_task,
+    explore_issue_risks_task,
+    manager_action_plan_task,
+    publish_alert_task,
+)
 from .tools.jira_client import JiraSprintMetricsTool
 from .tools.slack_notifier import SlackNotifierTool
 
@@ -16,15 +21,21 @@ def build_crew():
     jira_tool = JiraSprintMetricsTool()
     slack_tool = SlackNotifierTool()
 
-    agent = sprint_progress_agent(slack_tool)
+    manager_agent = sprint_manager_agent(slack_tool)
+    explorer_agent = sprint_explorer_agent(jira_tool)
+
+    metrics_task = collect_jira_metrics_task(manager_agent, jira_tool)
+    explorer_task = explore_issue_risks_task(explorer_agent, metrics_task)
+    manager_plan_task = manager_action_plan_task(manager_agent, metrics_task, explorer_task)
 
     tasks = [
-        collect_jira_metrics_task(agent, jira_tool),
-        forecast_delivery_task(agent),
-        publish_alert_task(agent, slack_tool),
+        metrics_task,
+        explorer_task,
+        manager_plan_task,
+        publish_alert_task(manager_agent, slack_tool, manager_plan_task),
     ]
 
-    return Crew(agents=[agent], tasks=tasks)
+    return Crew(agents=[manager_agent, explorer_agent], tasks=tasks)
 
 
 def run():
