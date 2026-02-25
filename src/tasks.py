@@ -72,7 +72,7 @@ def publish_alert_task(manager_agent, slack_notifier, manager_plan_task):
             "3) Finish sending for current board before moving to the next board.\n"
             "4) Never combine multiple boards into one message.\n\n"
             "Strict Slack format (must follow):\n"
-            "1) First line: 'Отчет о здоровье спринтов | Команда <TEAM_NAME>'.\n"
+            "1) First line: '📊 Отчет о здоровье спринтов | Команда <TEAM_NAME>'.\n"
             "2) Then one bullet per sprint of that board in this pattern:\n"
             "   - <SPRINT_NAME> | <RAG> | Прогресс <DONE_EST>/<TOTAL_EST> (<PERCENT>%) | "
             "Блокер: <STATUS_OR_NONE>\n"
@@ -88,7 +88,7 @@ def publish_alert_task(manager_agent, slack_notifier, manager_plan_task):
             "5) Do not include issue-level deep details, exact timestamps/dates, or long explanations.\n"
             "6) Total message length <= 1200 characters.\n"
             "7) If all sprints of the current board are green and stable, send one short line: "
-            "'Команда <TEAM_NAME>: все отслеживаемые спринты идут по плану.'"
+            "'✅ Команда <TEAM_NAME>: все отслеживаемые спринты идут по плану.'"
         ),
         expected_output=(
             "Slack delivery log showing one sent executive message per board in order."
